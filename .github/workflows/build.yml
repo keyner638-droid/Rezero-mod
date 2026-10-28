@@ -2,6 +2,8 @@ name: Compilar mod
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Descomprimir proyecto
         run: unzip -o rezero-proyecto.zip -d proyecto
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -19,7 +21,7 @@ jobs:
       - name: Compilar
         working-directory: proyecto
         run: gradle build --no-daemon
-      - uses: actions/upload-artifact@v4
-        with:
-          name: rezero-mod
-          path: proyecto/build/libs/*.jar
+      - name: Publicar jar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "v${{ github.run_number }}" proyecto/build/libs/*.jar --title "Build ${{ github.run_number }}" --notes "Compilado automaticamente"
